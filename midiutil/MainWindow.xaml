@@ -1,0 +1,129 @@
+﻿<Window x:Class="MidiUtil.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MidiUtil"
+        xmlns:vm="clr-namespace:MidiUtil.Models"
+        mc:Ignorable="d"
+        Title="RMG MIDI Util" Height="600" Width="800" MinHeight="200" MinWidth="200">
+    <Window.Resources>
+        <local:VisibilityConverter x:Key="VisibilityConverter" />
+        <local:VisibilityConverter x:Key="InvertedVisibilityConverter" IsInverted="True" />
+
+        <Style TargetType="CheckBox">
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="true">
+                    <Setter Property="ToolTip"
+                            Value="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=(Validation.Errors)[0].ErrorContent}" />
+                </Trigger>
+            </Style.Triggers>
+
+            <Setter Property="Margin" Value="4" />
+        </Style>
+
+        <Style TargetType="Button">
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="4" />
+                </Style>
+            </Style.Resources>
+
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Padding" Value="4, 0" />
+        </Style>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="Margin" Value="4" />
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Margin" Value="4" />
+        </Style>
+    </Window.Resources>
+    <Window.DataContext>
+        <vm:MainModel />
+    </Window.DataContext>
+    <Grid>
+        <DockPanel>
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_Open" Click="MenuItemOpen_OnClick" />
+                    <MenuItem Header="_Save" Click="MenuItemSave_OnClick"
+                              IsEnabled="{Binding MidiFile.CanSave, FallbackValue=False}" />
+                    <MenuItem Header="Save _As" Click="MenuItemSaveAs_OnClick"
+                              IsEnabled="{Binding MidiFile.CanSave, FallbackValue=False}" />
+                    <Separator />
+                    <MenuItem Header="_Exit" Click="MenuItemExit_OnClick" />
+                </MenuItem>
+            </Menu>
+            <DockPanel Visibility="{Binding MidiFile, Converter={StaticResource InvertedVisibilityConverter}}">
+                <TextBlock TextWrapping="Wrap" Margin="4">
+                    "Nothing here yet. Open a midi file and maybe something will happen..."
+                </TextBlock>
+            </DockPanel>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                <StackPanel DataContext="{Binding MidiFile}"
+                            Visibility="{Binding ., Converter={StaticResource VisibilityConverter}}"
+                            Margin="4" Grid.IsSharedSizeScope="True">
+                    <TextBlock Text="{Binding Filename}" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Randomize All Programs" Command="{Binding RandomizeAllProgramsCommand}" />
+                        <TextBlock Text="Min Program:" VerticalAlignment="Center" />
+                        <ComboBox ItemsSource="{Binding MinAvailableRandomPrograms}"
+                                  SelectedValue="{Binding MinRandomProgram}"
+                                  SelectedValuePath="Program" DisplayMemberPath="Name" Width="200" />
+                        <TextBlock Text="Max Program:" VerticalAlignment="Center" />
+                        <ComboBox ItemsSource="{Binding MaxAvailableRandomPrograms}"
+                                  SelectedValue="{Binding MaxRandomProgram}"
+                                  SelectedValuePath="Program" DisplayMemberPath="Name" Width="200" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Tracks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:MidiTrackModel}">
+                                <Border Margin="4" BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
+                                    <StackPanel>
+                                        <CheckBox Content="{Binding Name}"
+                                                  IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
+                                        <ItemsControl ItemsSource="{Binding ProgramChangeEvents}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type vm:ProgramChangeEventModel}">
+                                                    <DataTemplate.Resources>
+                                                        <Style TargetType="TextBlock"
+                                                               BasedOn="{StaticResource {x:Type TextBlock}}" />
+                                                        <Style TargetType="ComboBox"
+                                                               BasedOn="{StaticResource {x:Type ComboBox}}" />
+                                                        <Style TargetType="Button"
+                                                               BasedOn="{StaticResource {x:Type Button}}" />
+                                                    </DataTemplate.Resources>
+                                                    <Grid VerticalAlignment="Center">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"
+                                                                              SharedSizeGroup="ProgramChangeEventName" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Name}"
+                                                                   TextWrapping="Wrap" VerticalAlignment="Center" />
+                                                        <ComboBox Grid.Column="1" Width="200"
+                                                                  ItemsSource="{Binding Path=(vm:ProgramModel.Items)}"
+                                                                  SelectedValue="{Binding Program}"
+                                                                  SelectedValuePath="Program" DisplayMemberPath="Name" />
+                                                        <Button Grid.Column="2" Content="Randomize"
+                                                                Visibility="{Binding IsPercussion, Converter={StaticResource InvertedVisibilityConverter}}"
+                                                                CommandParameter="{Binding}"
+                                                                Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.MidiFile.RandomizeProgramCommand, FallbackValue=null}" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Grid>
+</Window>
