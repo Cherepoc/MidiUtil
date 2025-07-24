@@ -57,7 +57,7 @@ public sealed class BigEndianBinaryReader
 
     public uint ReadUInt32()
     {
-        const int length = 2;
+        const int length = 4;
         ValidateReadLength(length);
 
         var span = _data.AsSpan(Position, length);
