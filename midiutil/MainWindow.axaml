@@ -1,0 +1,112 @@
+<Window x:Class="MidiUtil.MainWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        xmlns:vm="using:MidiUtil.Models"
+        d:DataContext="{d:DesignInstance vm:MainModel}"
+        x:DataType="vm:MainModel"
+        Title="RMG MIDI Util" Height="600" Width="800" MinHeight="200" MinWidth="200">
+    <Window.Styles>
+        <Style Selector="CheckBox">
+            <Setter Property="Margin" Value="4" />
+        </Style>
+        <Style Selector="CheckBox:error">
+            <Setter Property="Foreground" Value="Red" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Padding" Value="8, 4" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Margin" Value="4" />
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="Margin" Value="4" />
+        </Style>
+    </Window.Styles>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open" Click="MenuItemOpen_OnClick" />
+                <MenuItem Header="_Save" Click="MenuItemSave_OnClick"
+                          IsEnabled="{Binding MidiFile.CanSave, FallbackValue=False}" />
+                <MenuItem Header="Save _As" Click="MenuItemSaveAs_OnClick"
+                          IsEnabled="{Binding MidiFile.CanSave, FallbackValue=False}" />
+                <Separator />
+                <MenuItem Header="_Exit" Click="MenuItemExit_OnClick" />
+            </MenuItem>
+        </Menu>
+        <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Margin="4"
+                   IsVisible="{Binding MidiFile, Converter={x:Static ObjectConverters.IsNull}}"
+                   Text="Nothing here yet. Open a midi file and maybe something will happen..." />
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                      DataContext="{Binding MidiFile}"
+                      IsVisible="{Binding Path=., Converter={x:Static ObjectConverters.IsNotNull}}">
+            <StackPanel x:DataType="vm:MidiFileModel" Margin="4" Grid.IsSharedSizeScope="True">
+                <TextBlock Text="{Binding Filename}" TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Randomize All Programs" Command="{Binding RandomizeAllProgramsCommand}" />
+                    <TextBlock Text="Min Program:" VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding MinAvailableRandomPrograms}"
+                              SelectedValue="{Binding MinRandomProgram}"
+                              SelectedValueBinding="{Binding Program}" Width="200">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ProgramModel">
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Text="Max Program:" VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding MaxAvailableRandomPrograms}"
+                              SelectedValue="{Binding MaxRandomProgram}"
+                              SelectedValueBinding="{Binding Program}" Width="200">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ProgramModel">
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Tracks}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:MidiTrackModel">
+                            <Border Margin="4" BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
+                                <StackPanel>
+                                    <CheckBox Content="{Binding Name}"
+                                              IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
+                                    <ItemsControl ItemsSource="{Binding ProgramChangeEvents}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:ProgramChangeEventModel">
+                                                <Grid VerticalAlignment="Center" ColumnDefinitions="Auto,Auto,Auto">
+                                                    <TextBlock Grid.Column="0" Text="{Binding Name}"
+                                                               TextWrapping="Wrap" VerticalAlignment="Center" />
+                                                    <ComboBox Grid.Column="1" Width="200"
+                                                              ItemsSource="{x:Static vm:ProgramModel.Items}"
+                                                              SelectedValue="{Binding Program}"
+                                                              SelectedValueBinding="{Binding Program}">
+                                                        <ComboBox.ItemTemplate>
+                                                            <DataTemplate x:DataType="vm:ProgramModel">
+                                                                <TextBlock Text="{Binding Name}" />
+                                                            </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                    </ComboBox>
+                                                    <Button Grid.Column="2" Content="Randomize"
+                                                            IsVisible="{Binding !IsPercussion}"
+                                                            CommandParameter="{Binding}"
+                                                            Command="{Binding $parent[Window].((vm:MainModel)DataContext).MidiFile.RandomizeProgramCommand, FallbackValue={x:Null}}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

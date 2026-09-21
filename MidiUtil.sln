@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MidiUtil", "MidiUtil\MidiUtil.csproj", "{EB0DD7A0-91A9-4B9B-B299-BB5DCD5FAAC1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MidiUtil", "midiutil\MidiUtil.csproj", "{EB0DD7A0-91A9-4B9B-B299-BB5DCD5FAAC1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

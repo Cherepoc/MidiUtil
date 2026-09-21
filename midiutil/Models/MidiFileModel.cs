@@ -18,6 +18,9 @@ public sealed class MidiFileModel : ModelBase
 
         Filename = System.IO.Path.GetFileName(path);
 
+        RandomizeAllProgramsCommand = new RelayCommand(RandomizePrograms);
+        RandomizeProgramCommand = new RelayCommand(RandomizeProgram);
+
         foreach (var midiTrackModel in tracks)
             midiTrackModel.PropertyChanged += MidiTrackModelOnPropertyChanged;
     }
@@ -60,9 +63,9 @@ public sealed class MidiFileModel : ModelBase
 
     public IReadOnlyList<MidiTrackModel> Tracks { get; }
 
-    public ICommand RandomizeAllProgramsCommand => new RelayCommand(RandomizePrograms);
+    public ICommand RandomizeAllProgramsCommand { get; }
 
-    public ICommand RandomizeProgramCommand => new RelayCommand(RandomizeProgram);
+    public ICommand RandomizeProgramCommand { get; }
 
     private void MidiTrackModelOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
