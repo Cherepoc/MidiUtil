@@ -7,7 +7,7 @@
         xmlns:vm="using:MidiUtil.Models"
         d:DataContext="{d:DesignInstance vm:MainModel}"
         x:DataType="vm:MainModel"
-        Title="RMG MIDI Util" Height="680" Width="900" MinHeight="300" MinWidth="560">
+        Title="{Binding Title}" Height="680" Width="900" MinHeight="300" MinWidth="560">
     <Window.Styles>
         <Style Selector="TextBlock.title">
             <Setter Property="FontSize" Value="20" />
@@ -55,15 +55,22 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="_Open" Click="MenuItemOpen_OnClick" />
-                <MenuItem Header="_Save" Click="MenuItemSave_OnClick"
+                <MenuItem Header="_Open" InputGesture="Ctrl+O" Click="MenuItemOpen_OnClick" />
+                <MenuItem Header="_Save" InputGesture="Ctrl+S" Click="MenuItemSave_OnClick"
                           IsEnabled="{Binding MidiFile.CanSave, FallbackValue=False}" />
-                <MenuItem Header="Save _As" Click="MenuItemSaveAs_OnClick"
+                <MenuItem Header="Save _As" InputGesture="Ctrl+Shift+S" Click="MenuItemSaveAs_OnClick"
                           IsEnabled="{Binding MidiFile.CanSave, FallbackValue=False}" />
                 <Separator />
                 <MenuItem Header="_Exit" Click="MenuItemExit_OnClick" />
             </MenuItem>
         </Menu>
+
+        <Border DockPanel.Dock="Bottom" Padding="12, 6"
+                Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0, 1, 0, 0"
+                IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Classes="muted" FontSize="12" Text="{Binding StatusMessage}" TextTrimming="CharacterEllipsis" />
+        </Border>
 
         <Grid>
             <!-- Empty state -->
@@ -71,7 +78,7 @@
                         IsVisible="{Binding MidiFile, Converter={x:Static ObjectConverters.IsNull}}">
                 <TextBlock Text="🎹" FontSize="56" HorizontalAlignment="Center" />
                 <TextBlock Classes="title" Text="No MIDI file open" HorizontalAlignment="Center" />
-                <TextBlock Classes="muted" Text="Open a file to view tracks, remove them or shuffle instruments."
+                <TextBlock Classes="muted" Text="Open a file (or drop one here) to view tracks, remove them or shuffle instruments."
                            HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
                 <Button Classes="accent" Content="Open MIDI file…" HorizontalAlignment="Center"
                         Click="MenuItemOpen_OnClick" />

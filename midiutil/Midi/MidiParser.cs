@@ -12,12 +12,28 @@ public static class MidiParser
 
     public static MidiFile Parse(Stream stream)
     {
+        try
+        {
+            return ParseCore(stream);
+        }
+        catch (ArgumentException)
+        {
+            // the reader ran past the end of the data
+            throw new MidiParserException("The file is truncated or corrupt.");
+        }
+    }
+
+    private static MidiFile ParseCore(Stream stream)
+    {
         var reader = new BigEndianBinaryReader(stream);
-        ValidateSequence(reader, MidiHeader);
+        ValidateSequence(reader, MidiHeader, "This is not a MIDI file.");
 
         var format = reader.ReadUInt16();
         if (format != 1)
-            throw new MidiParserException();
+        {
+            throw new MidiParserException(
+                $"Only MIDI format 1 files are supported (this file is format {format}).");
+        }
 
         var trackCount = reader.ReadUInt16();
         if (trackCount == 0)
@@ -49,7 +65,7 @@ public static class MidiParser
     private static Track ParseTrack(BigEndianBinaryReader reader)
     {
         var trackStartIndex = reader.Position;
-        ValidateSequence(reader, TrackHeader);
+        ValidateSequence(reader, TrackHeader, "Invalid track header.");
 
         var trackLength = reader.ReadUInt32();
         var trackDataStartIndex = reader.Position;
@@ -101,7 +117,7 @@ public static class MidiParser
 
         // sysex are not supported
         if (eventHeader is 0xF0 or 0xF7)
-            throw new MidiParserException("SysEx events are not supported in this parser.");
+            throw new MidiParserException("This file contains SysEx events, which are not supported.");
 
         // meta
         if (eventHeader == 0xFF)
@@ -155,7 +171,7 @@ public static class MidiParser
         };
     }
 
-    private static void ValidateSequence(BigEndianBinaryReader reader, byte[] target)
+    private static void ValidateSequence(BigEndianBinaryReader reader, byte[] target, string errorMessage)
     {
         if (target.Length == 0)
             return;
@@ -163,7 +179,7 @@ public static class MidiParser
         foreach (var b in target)
         {
             if (reader.ReadByte() != b)
-                throw new MidiParserException();
+                throw new MidiParserException(errorMessage);
         }
     }
 

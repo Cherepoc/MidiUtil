@@ -7,22 +7,29 @@ namespace MidiUtil.Models;
 public sealed class MidiFileModel : ModelBase
 {
     private bool _canSave = true;
+    private string _filename;
+    private bool _isDirty;
+    private string _path;
     private byte _maxRandomProgram = 119;
     private byte _minRandomProgram;
 
     public MidiFileModel(string path, byte[] data, IReadOnlyList<MidiTrackModel> tracks)
     {
-        Path = path;
+        _path = path;
         Data = data;
         Tracks = tracks;
 
-        Filename = System.IO.Path.GetFileName(path);
+        _filename = System.IO.Path.GetFileName(path);
 
         RandomizeAllProgramsCommand = new RelayCommand(RandomizePrograms);
         RandomizeProgramCommand = new RelayCommand(RandomizeProgram);
 
         foreach (var midiTrackModel in tracks)
+        {
             midiTrackModel.PropertyChanged += MidiTrackModelOnPropertyChanged;
+            foreach (var programChangeEventModel in midiTrackModel.ProgramChangeEvents)
+                programChangeEventModel.PropertyChanged += ProgramChangeEventModelOnPropertyChanged;
+        }
     }
 
     public bool CanSave
@@ -31,9 +38,33 @@ public sealed class MidiFileModel : ModelBase
         private set => ChangeProperty(ref _canSave, value);
     }
 
-    public string Path { get; }
+    public string Path
+    {
+        get => _path;
+        private set => ChangeProperty(ref _path, value);
+    }
 
-    public string Filename { get; }
+    public string Filename
+    {
+        get => _filename;
+        private set => ChangeProperty(ref _filename, value);
+    }
+
+    /// <summary>
+    ///     True when there are edits that have not been written to disk.
+    /// </summary>
+    public bool IsDirty
+    {
+        get => _isDirty;
+        private set => ChangeProperty(ref _isDirty, value);
+    }
+
+    public void MarkSaved(string path)
+    {
+        Path = path;
+        Filename = System.IO.Path.GetFileName(path);
+        IsDirty = false;
+    }
 
     public byte[] Data { get; }
 
@@ -71,11 +102,18 @@ public sealed class MidiFileModel : ModelBase
     {
         if (e.PropertyName == nameof(MidiTrackModel.IsEnabled))
         {
+            IsDirty = true;
             var hasAtLeastOneTrackEnabledError = Tracks.All(x => !x.IsEnabled);
             CanSave = !hasAtLeastOneTrackEnabledError;
             foreach (var midiTrackModel in Tracks)
                 midiTrackModel.SetAtLeasOneTrackEnabledError(hasAtLeastOneTrackEnabledError);
         }
+    }
+
+    private void ProgramChangeEventModelOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ProgramChangeEventModel.Program))
+            IsDirty = true;
     }
 
     private void RandomizePrograms(object? target)
